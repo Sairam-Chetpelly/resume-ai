@@ -1,0 +1,342 @@
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Brain, CheckCircle, X, Trophy, Target } from "lucide-react"
+import Link from "next/link"
+
+interface Question {
+  question: string
+  options: string[]
+  correct: number
+  difficulty: string
+}
+
+interface AssessmentResult {
+  skill: string
+  score: number
+  level: string
+  correct: number
+  total: number
+  recommendations: string[]
+}
+
+const AVAILABLE_SKILLS = ["JavaScript", "React", "Python", "Node.js", "SQL"]
+
+export default function SkillAssessmentPage() {
+  const [selectedSkill, setSelectedSkill] = useState("")
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [answers, setAnswers] = useState<number[]>([])
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
+  const [showResult, setShowResult] = useState(false)
+  const [result, setResult] = useState<AssessmentResult | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const startAssessment = async (skill: string) => {
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/skill-assessment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skill }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setQuestions(data.questions)
+        setSelectedSkill(skill)
+        setCurrentQuestion(0)
+        setAnswers([])
+        setSelectedAnswer(null)
+        setShowResult(false)
+      }
+    } catch (error) {
+      console.error("Failed to load questions:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const submitAnswer = () => {
+    if (selectedAnswer === null) return
+
+    const newAnswers = [...answers, selectedAnswer]
+    setAnswers(newAnswers)
+    setSelectedAnswer(null)
+
+    if (currentQuestion + 1 < questions.length) {
+      setCurrentQuestion(currentQuestion + 1)
+    } else {
+      finishAssessment(newAnswers)
+    }
+  }
+
+  const finishAssessment = async (finalAnswers: number[]) => {
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/skill-assessment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skill: selectedSkill, answers: finalAnswers }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        setResult(result)
+        setShowResult(true)
+      }
+    } catch (error) {
+      console.error("Failed to submit assessment:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const resetAssessment = () => {
+    setSelectedSkill("")
+    setQuestions([])
+    setCurrentQuestion(0)
+    setAnswers([])
+    setSelectedAnswer(null)
+    setShowResult(false)
+    setResult(null)
+  }
+
+  if (showResult && result) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="border-b bg-white">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <Link href="/" className="flex items-center space-x-2">
+              <Brain className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900">ResumeAI</h1>
+            </Link>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4">
+                  <Trophy className="h-16 w-16 text-yellow-500 mx-auto" />
+                </div>
+                <CardTitle className="text-2xl">Assessment Complete!</CardTitle>
+                <CardDescription>Here are your {result.skill} assessment results</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-blue-600 mb-2">{result.score}%</div>
+                  <Badge
+                    variant={
+                      result.level === "Advanced"
+                        ? "default"
+                        : result.level === "Intermediate"
+                          ? "secondary"
+                          : "outline"
+                    }
+                    className="text-lg px-4 py-1"
+                  >
+                    {result.level}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Progress</span>
+                    <span>
+                      {result.correct}/{result.total} correct
+                    </span>
+                  </div>
+                  <Progress value={result.score} className="h-3" />
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Recommendations</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {result.recommendations.map((rec, index) => (
+                        <li key={index} className="flex items-start">
+                          <Target className="h-4 w-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <div className="flex gap-3">
+                  <Button onClick={resetAssessment} className="flex-1">
+                    Take Another Assessment
+                  </Button>
+                  <Button variant="outline" asChild className="flex-1">
+                    <Link href="/analyze">Analyze Resume</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (questions.length > 0 && !showResult) {
+    const question = questions[currentQuestion]
+    const progress = ((currentQuestion + 1) / questions.length) * 100
+
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="border-b bg-white">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <Link href="/" className="flex items-center space-x-2">
+              <Brain className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900">ResumeAI</h1>
+            </Link>
+            <Badge variant="outline">
+              {currentQuestion + 1} of {questions.length}
+            </Badge>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-semibold">{selectedSkill} Assessment</h2>
+                <span className="text-sm text-gray-600">{Math.round(progress)}% Complete</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">{question.question}</CardTitle>
+                <CardDescription>
+                  <Badge variant="outline" className="capitalize">
+                    {question.difficulty}
+                  </Badge>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  {question.options.map((option, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedAnswer(index)}
+                      className={`w-full p-4 text-left border rounded-lg transition-colors ${
+                        selectedAnswer === index
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 mr-3 ${
+                            selectedAnswer === index ? "border-blue-500 bg-blue-500" : "border-gray-300"
+                          }`}
+                        >
+                          {selectedAnswer === index && <CheckCircle className="w-4 h-4 text-white" />}
+                        </div>
+                        {option}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex justify-between pt-4">
+                  <Button variant="outline" onClick={resetAssessment}>
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
+                  <Button onClick={submitAnswer} disabled={selectedAnswer === null || isLoading}>
+                    {currentQuestion + 1 === questions.length ? "Finish" : "Next Question"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="border-b bg-white">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center space-x-2">
+            <Brain className="h-8 w-8 text-blue-600" />
+            <h1 className="text-2xl font-bold text-gray-900">ResumeAI</h1>
+          </Link>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Skill Assessment</h2>
+            <p className="text-gray-600">
+              Test your knowledge and get personalized recommendations to improve your skills
+            </p>
+          </div>
+
+          <Alert className="mb-8">
+            <Brain className="h-4 w-4" />
+            <AlertDescription>
+              Each assessment contains multiple-choice questions designed to evaluate your understanding of key
+              concepts. Results include personalized learning recommendations.
+            </AlertDescription>
+          </Alert>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {AVAILABLE_SKILLS.map((skill) => (
+              <Card key={skill} className="hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    {skill}
+                    <Badge variant="outline">Quiz</Badge>
+                  </CardTitle>
+                  <CardDescription>Test your {skill} knowledge with interactive questions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => startAssessment(skill)} disabled={isLoading} className="w-full">
+                    {isLoading ? "Loading..." : "Start Assessment"}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <h3 className="text-xl font-semibold mb-4">Why Take Skill Assessments?</h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="p-6 bg-white rounded-lg shadow-sm">
+                <Target className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+                <h4 className="font-medium mb-2">Identify Knowledge Gaps</h4>
+                <p className="text-sm text-gray-600">Discover areas where you need to focus your learning efforts</p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-sm">
+                <Trophy className="h-8 w-8 text-yellow-600 mx-auto mb-3" />
+                <h4 className="font-medium mb-2">Validate Your Skills</h4>
+                <p className="text-sm text-gray-600">Get objective feedback on your current skill level</p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-sm">
+                <Brain className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+                <h4 className="font-medium mb-2">Personalized Learning</h4>
+                <p className="text-sm text-gray-600">Receive tailored recommendations for skill improvement</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

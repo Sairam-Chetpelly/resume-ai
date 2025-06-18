@@ -17,6 +17,15 @@ export default function HomePage() {
             <Link href="/analyze" className="text-gray-600 hover:text-gray-900">
               Analyze Resume
             </Link>
+            <Link href="/advanced-analysis" className="text-gray-600 hover:text-gray-900">
+              Advanced Analysis
+            </Link>
+            <Link href="/resume-builder" className="text-gray-600 hover:text-gray-900">
+              Resume Builder
+            </Link>
+            <Link href="/skill-assessment" className="text-gray-600 hover:text-gray-900">
+              Skill Assessment
+            </Link>
             <Button asChild>
               <Link href="/analyze">Get Started</Link>
             </Button>
@@ -45,28 +54,38 @@ export default function HomePage() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">How It Works</h3>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-4 gap-8">
             <Card className="text-center">
               <CardHeader>
                 <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                <CardTitle>Upload Resume</CardTitle>
-                <CardDescription>Simply upload your resume in PDF or text format</CardDescription>
+                <CardTitle>Smart Analysis</CardTitle>
+                <CardDescription>AI-powered resume analysis with ATS scoring and industry insights</CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="text-center">
               <CardHeader>
                 <Brain className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                <CardTitle>AI Analysis</CardTitle>
-                <CardDescription>Our AI analyzes your skills, experience, and formatting</CardDescription>
+                <CardTitle>Resume Builder</CardTitle>
+                <CardDescription>
+                  Build professional resumes with guided templates and real-time preview
+                </CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="text-center">
               <CardHeader>
                 <TrendingUp className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                <CardTitle>Get Insights</CardTitle>
-                <CardDescription>Receive detailed feedback and improvement suggestions</CardDescription>
+                <CardTitle>Skill Assessment</CardTitle>
+                <CardDescription>Test your knowledge and get personalized learning recommendations</CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="text-center">
+              <CardHeader>
+                <Target className="h-12 w-12 text-orange-600 mx-auto mb-4" />
+                <CardTitle>Industry Insights</CardTitle>
+                <CardDescription>Market analysis, salary insights, and trending skills in your field</CardDescription>
               </CardHeader>
             </Card>
           </div>
