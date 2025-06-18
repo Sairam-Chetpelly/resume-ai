@@ -23,6 +23,9 @@ export default function HomePage() {
             <Link href="/resume-builder" className="text-gray-600 hover:text-gray-900">
               Resume Builder
             </Link>
+            <Link href="/cover-letter" className="text-gray-600 hover:text-gray-900">
+              Cover Letter
+            </Link>
             <Link href="/skill-assessment" className="text-gray-600 hover:text-gray-900">
               Skill Assessment
             </Link>

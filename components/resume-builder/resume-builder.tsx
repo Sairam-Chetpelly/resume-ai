@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2, Download, Eye } from "lucide-react"
 import { ResumePreview } from "./resume-preview"
+import { Header } from "@/components/layout/header"
 
 interface PersonalInfo {
   fullName: string
@@ -246,291 +247,294 @@ export function ResumeBuilder() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Resume Builder</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={loadSampleData}>
-            Load Sample
-          </Button>
-          <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
-            <Eye className="mr-2 h-4 w-4" />
-            {showPreview ? "Hide Preview" : "Show Preview"}
-          </Button>
-          <Button onClick={downloadResume}>
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Resume Builder</h1>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={loadSampleData}>
+              Load Sample
+            </Button>
+            <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
+              <Eye className="mr-2 h-4 w-4" />
+              {showPreview ? "Hide Preview" : "Show Preview"}
+            </Button>
+            <Button onClick={downloadResume}>
+              <Download className="mr-2 h-4 w-4" />
+              Download
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "lg:grid-cols-1 max-w-4xl mx-auto"}`}>
-        {/* Form Section */}
-        <div className="space-y-6">
-          {/* Personal Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    value={resumeData.personalInfo.fullName}
-                    onChange={(e) =>
-                      setResumeData((prev) => ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, fullName: e.target.value },
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={resumeData.personalInfo.email}
-                    onChange={(e) =>
-                      setResumeData((prev) => ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, email: e.target.value },
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={resumeData.personalInfo.phone}
-                    onChange={(e) =>
-                      setResumeData((prev) => ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, phone: e.target.value },
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={resumeData.personalInfo.location}
-                    onChange={(e) =>
-                      setResumeData((prev) => ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, location: e.target.value },
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="linkedin">LinkedIn</Label>
-                  <Input
-                    id="linkedin"
-                    value={resumeData.personalInfo.linkedin}
-                    onChange={(e) =>
-                      setResumeData((prev) => ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, linkedin: e.target.value },
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="website">Website</Label>
-                  <Input
-                    id="website"
-                    value={resumeData.personalInfo.website}
-                    onChange={(e) =>
-                      setResumeData((prev) => ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, website: e.target.value },
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Professional Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Professional Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Write a brief summary of your professional background..."
-                value={resumeData.summary}
-                onChange={(e) => setResumeData((prev) => ({ ...prev, summary: e.target.value }))}
-                rows={4}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Experience */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                Experience
-                <Button onClick={addExperience} size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Experience
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {resumeData.experiences.map((exp) => (
-                <div key={exp.id} className="border p-4 rounded-lg space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div className="grid grid-cols-2 gap-3 flex-1">
-                      <Input
-                        placeholder="Company"
-                        value={exp.company}
-                        onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
-                      />
-                      <Input
-                        placeholder="Position"
-                        value={exp.position}
-                        onChange={(e) => updateExperience(exp.id, "position", e.target.value)}
-                      />
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => removeExperience(exp.id)} className="ml-2">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
+        <div className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "lg:grid-cols-1 max-w-4xl mx-auto"}`}>
+          {/* Form Section */}
+          <div className="space-y-6">
+            {/* Personal Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="fullName">Full Name</Label>
                     <Input
-                      placeholder="Start Date"
-                      value={exp.startDate}
-                      onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)}
-                    />
-                    <Input
-                      placeholder="End Date"
-                      value={exp.endDate}
-                      onChange={(e) => updateExperience(exp.id, "endDate", e.target.value)}
-                      disabled={exp.current}
+                      id="fullName"
+                      value={resumeData.personalInfo.fullName}
+                      onChange={(e) =>
+                        setResumeData((prev) => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, fullName: e.target.value },
+                        }))
+                      }
                     />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={`current-${exp.id}`}
-                      checked={exp.current}
-                      onChange={(e) => updateExperience(exp.id, "current", e.target.checked)}
-                    />
-                    <Label htmlFor={`current-${exp.id}`}>Currently working here</Label>
-                  </div>
-                  <Textarea
-                    placeholder="Describe your responsibilities and achievements..."
-                    value={exp.description}
-                    onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Education */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                Education
-                <Button onClick={addEducation} size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Education
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {resumeData.education.map((edu) => (
-                <div key={edu.id} className="border p-4 rounded-lg space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div className="grid grid-cols-2 gap-3 flex-1">
-                      <Input
-                        placeholder="Institution"
-                        value={edu.institution}
-                        onChange={(e) => updateEducation(edu.id, "institution", e.target.value)}
-                      />
-                      <Input
-                        placeholder="Degree"
-                        value={edu.degree}
-                        onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
-                      />
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => removeEducation(edu.id)} className="ml-2">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label htmlFor="email">Email</Label>
                     <Input
-                      placeholder="Field of Study"
-                      value={edu.field}
-                      onChange={(e) => updateEducation(edu.id, "field", e.target.value)}
-                    />
-                    <Input
-                      placeholder="Graduation Date"
-                      value={edu.graduationDate}
-                      onChange={(e) => updateEducation(edu.id, "graduationDate", e.target.value)}
-                    />
-                    <Input
-                      placeholder="GPA (optional)"
-                      value={edu.gpa || ""}
-                      onChange={(e) => updateEducation(edu.id, "gpa", e.target.value)}
+                      id="email"
+                      type="email"
+                      value={resumeData.personalInfo.email}
+                      onChange={(e) =>
+                        setResumeData((prev) => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, email: e.target.value },
+                        }))
+                      }
                     />
                   </div>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={resumeData.personalInfo.phone}
+                      onChange={(e) =>
+                        setResumeData((prev) => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, phone: e.target.value },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={resumeData.personalInfo.location}
+                      onChange={(e) =>
+                        setResumeData((prev) => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, location: e.target.value },
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="linkedin">LinkedIn</Label>
+                    <Input
+                      id="linkedin"
+                      value={resumeData.personalInfo.linkedin}
+                      onChange={(e) =>
+                        setResumeData((prev) => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, linkedin: e.target.value },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      value={resumeData.personalInfo.website}
+                      onChange={(e) =>
+                        setResumeData((prev) => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, website: e.target.value },
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Skills */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Skills</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a skill..."
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && addSkill()}
+            {/* Professional Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Professional Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  placeholder="Write a brief summary of your professional background..."
+                  value={resumeData.summary}
+                  onChange={(e) => setResumeData((prev) => ({ ...prev, summary: e.target.value }))}
+                  rows={4}
                 />
-                <Button onClick={addSkill}>Add</Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {resumeData.skills.map((skill) => (
-                  <div
-                    key={skill}
-                    className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                  >
-                    {skill}
-                    <button onClick={() => removeSkill(skill)} className="ml-2 text-blue-600 hover:text-blue-800">
-                      ×
-                    </button>
+              </CardContent>
+            </Card>
+
+            {/* Experience */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  Experience
+                  <Button onClick={addExperience} size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Experience
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {resumeData.experiences.map((exp) => (
+                  <div key={exp.id} className="border p-4 rounded-lg space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="grid grid-cols-2 gap-3 flex-1">
+                        <Input
+                          placeholder="Company"
+                          value={exp.company}
+                          onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
+                        />
+                        <Input
+                          placeholder="Position"
+                          value={exp.position}
+                          onChange={(e) => updateExperience(exp.id, "position", e.target.value)}
+                        />
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => removeExperience(exp.id)} className="ml-2">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        placeholder="Start Date"
+                        value={exp.startDate}
+                        onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)}
+                      />
+                      <Input
+                        placeholder="End Date"
+                        value={exp.endDate}
+                        onChange={(e) => updateExperience(exp.id, "endDate", e.target.value)}
+                        disabled={exp.current}
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`current-${exp.id}`}
+                        checked={exp.current}
+                        onChange={(e) => updateExperience(exp.id, "current", e.target.checked)}
+                      />
+                      <Label htmlFor={`current-${exp.id}`}>Currently working here</Label>
+                    </div>
+                    <Textarea
+                      placeholder="Describe your responsibilities and achievements..."
+                      value={exp.description}
+                      onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
+                      rows={3}
+                    />
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
 
-        {/* Preview Section */}
-        {showPreview && (
-          <div className="lg:sticky lg:top-6">
-            <ResumePreview resumeData={resumeData} onDownload={downloadResume} />
+            {/* Education */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  Education
+                  <Button onClick={addEducation} size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Education
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {resumeData.education.map((edu) => (
+                  <div key={edu.id} className="border p-4 rounded-lg space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="grid grid-cols-2 gap-3 flex-1">
+                        <Input
+                          placeholder="Institution"
+                          value={edu.institution}
+                          onChange={(e) => updateEducation(edu.id, "institution", e.target.value)}
+                        />
+                        <Input
+                          placeholder="Degree"
+                          value={edu.degree}
+                          onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
+                        />
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => removeEducation(edu.id)} className="ml-2">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <Input
+                        placeholder="Field of Study"
+                        value={edu.field}
+                        onChange={(e) => updateEducation(edu.id, "field", e.target.value)}
+                      />
+                      <Input
+                        placeholder="Graduation Date"
+                        value={edu.graduationDate}
+                        onChange={(e) => updateEducation(edu.id, "graduationDate", e.target.value)}
+                      />
+                      <Input
+                        placeholder="GPA (optional)"
+                        value={edu.gpa || ""}
+                        onChange={(e) => updateEducation(edu.id, "gpa", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Skills */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Skills</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a skill..."
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && addSkill()}
+                  />
+                  <Button onClick={addSkill}>Add</Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {resumeData.skills.map((skill) => (
+                    <div
+                      key={skill}
+                      className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      {skill}
+                      <button onClick={() => removeSkill(skill)} className="ml-2 text-blue-600 hover:text-blue-800">
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
+
+          {/* Preview Section */}
+          {showPreview && (
+            <div className="lg:sticky lg:top-6">
+              <ResumePreview resumeData={resumeData} onDownload={downloadResume} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

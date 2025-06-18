@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Brain, Target, TrendingUp, Shield, Loader2, CheckCircle, AlertTriangle } from "lucide-react"
-import Link from "next/link"
+import { Target, TrendingUp, Shield, Loader2, CheckCircle, AlertTriangle } from "lucide-react"
 import { SkillRadarChart } from "@/components/charts/skill-radar-chart"
+import { Header } from "@/components/layout/header"
 
 interface ATSAnalysis {
   atsScore: number
@@ -161,22 +161,7 @@ Responsibilities:
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <Brain className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">ResumeAI</h1>
-          </Link>
-          <nav className="flex items-center space-x-4">
-            <Link href="/analyze" className="text-gray-600 hover:text-gray-900">
-              Basic Analysis
-            </Link>
-            <Link href="/resume-builder" className="text-gray-600 hover:text-gray-900">
-              Resume Builder
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">

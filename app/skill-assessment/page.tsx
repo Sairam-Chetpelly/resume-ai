@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Brain, CheckCircle, X, Trophy, Target } from "lucide-react"
 import Link from "next/link"
+import { Header } from "@/components/layout/header"
 
 interface Question {
   question: string
@@ -110,14 +111,7 @@ export default function SkillAssessmentPage() {
   if (showResult && result) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <header className="border-b bg-white">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <Brain className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">ResumeAI</h1>
-            </Link>
-          </div>
-        </header>
+        <Header />
 
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
@@ -194,17 +188,7 @@ export default function SkillAssessmentPage() {
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <header className="border-b bg-white">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <Brain className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">ResumeAI</h1>
-            </Link>
-            <Badge variant="outline">
-              {currentQuestion + 1} of {questions.length}
-            </Badge>
-          </div>
-        </header>
+        <Header />
 
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
@@ -270,14 +254,7 @@ export default function SkillAssessmentPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <Brain className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">ResumeAI</h1>
-          </Link>
-        </div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">

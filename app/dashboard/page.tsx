@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { Header } from "@/components/layout/header"
 
 interface AnalysisHistory {
   id: string
@@ -55,22 +56,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <Brain className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">ResumeAI</h1>
-          </Link>
-          <nav className="flex items-center space-x-4">
-            <Link href="/analyze" className="text-gray-600 hover:text-gray-900">
-              New Analysis
-            </Link>
-            <Button asChild>
-              <Link href="/analyze">Analyze Resume</Link>
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
