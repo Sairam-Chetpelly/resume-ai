@@ -112,6 +112,39 @@ const SKILL_QUESTIONS = {
       correct: 1,
       difficulty: "advanced",
     },
+    {
+      question: "What is the Context API in React?",
+      options: [
+        "A way to style components",
+        "A method to pass data through the component tree without props",
+        "A database connection API",
+        "A way to create new components",
+      ],
+      correct: 1,
+      difficulty: "intermediate",
+    },
+    {
+      question: "What is the key prop in React lists?",
+      options: [
+        "Optional attribute for styling",
+        "Required unique identifier to help React identify items",
+        "A way to encrypt data",
+        "A performance optimization that can be skipped",
+      ],
+      correct: 1,
+      difficulty: "beginner",
+    },
+    {
+      question: "What is React Suspense?",
+      options: [
+        "A way to handle loading states",
+        "A method to suspend component rendering until data is ready",
+        "A debugging tool",
+        "A way to prevent component updates",
+      ],
+      correct: 1,
+      difficulty: "advanced",
+    },
   ],
   Python: [
     {
@@ -164,6 +197,28 @@ const SKILL_QUESTIONS = {
       correct: 1,
       difficulty: "advanced",
     },
+    {
+      question: "What is the purpose of __init__ method in Python classes?",
+      options: [
+        "To initialize class variables",
+        "To create a constructor for the class",
+        "To define class methods",
+        "To import modules",
+      ],
+      correct: 1,
+      difficulty: "beginner",
+    },
+    {
+      question: "What are Python context managers?",
+      options: [
+        "Tools for managing memory",
+        "Objects that manage resource allocation and cleanup",
+        "Special variables in Python",
+        "Tools for managing database connections only",
+      ],
+      correct: 1,
+      difficulty: "advanced",
+    },
   ],
   "Node.js": [
     {
@@ -212,6 +267,28 @@ const SKILL_QUESTIONS = {
         "Creating multiple worker processes to handle load",
         "A type of database operation",
         "A debugging technique",
+      ],
+      correct: 1,
+      difficulty: "advanced",
+    },
+    {
+      question: "What is the purpose of the 'buffer' class in Node.js?",
+      options: [
+        "To store temporary data",
+        "To handle binary data",
+        "To buffer network requests",
+        "To improve performance of file operations",
+      ],
+      correct: 1,
+      difficulty: "intermediate",
+    },
+    {
+      question: "What is the purpose of process.nextTick() in Node.js?",
+      options: [
+        "To restart the application",
+        "To schedule a callback to execute after the current operation completes",
+        "To move to the next middleware",
+        "To handle errors",
       ],
       correct: 1,
       difficulty: "advanced",
@@ -273,6 +350,28 @@ const SKILL_QUESTIONS = {
       correct: 1,
       difficulty: "intermediate",
     },
+    {
+      question: "What is a transaction in SQL?",
+      options: [
+        "A financial operation",
+        "A unit of work that is performed against a database",
+        "A type of query",
+        "A connection to the database",
+      ],
+      correct: 1,
+      difficulty: "intermediate",
+    },
+    {
+      question: "What is the purpose of the HAVING clause in SQL?",
+      options: [
+        "To filter rows before grouping",
+        "To filter groups after the GROUP BY clause",
+        "To join tables",
+        "To sort results",
+      ],
+      correct: 1,
+      difficulty: "advanced",
+    },
   ],
   TypeScript: [
     {
@@ -297,6 +396,50 @@ const SKILL_QUESTIONS = {
       correct: 1,
       difficulty: "intermediate",
     },
+    {
+      question: "What is the 'any' type in TypeScript?",
+      options: [
+        "A type that can be assigned any value",
+        "A type for arrays only",
+        "A type for numbers only",
+        "A type for functions only",
+      ],
+      correct: 0,
+      difficulty: "beginner",
+    },
+    {
+      question: "What are generics in TypeScript?",
+      options: [
+        "Generic functions that work with any data type",
+        "A way to create reusable components that work with a variety of types",
+        "A type of variable",
+        "A debugging tool",
+      ],
+      correct: 1,
+      difficulty: "advanced",
+    },
+    {
+      question: "What is the difference between 'interface' and 'type' in TypeScript?",
+      options: [
+        "No difference",
+        "Interfaces can be extended, types cannot",
+        "Types can be used with primitives, interfaces cannot",
+        "Both B and C are correct",
+      ],
+      correct: 3,
+      difficulty: "intermediate",
+    },
+    {
+      question: "What is a union type in TypeScript?",
+      options: [
+        "A type that combines multiple types",
+        "A type that can be one of several types",
+        "A type for unions only",
+        "A type for database operations",
+      ],
+      correct: 1,
+      difficulty: "intermediate",
+    },
   ],
   CSS: [
     {
@@ -311,12 +454,59 @@ const SKILL_QUESTIONS = {
       correct: 0,
       difficulty: "intermediate",
     },
+    {
+      question: "What is the box model in CSS?",
+      options: [
+        "A 3D modeling tool",
+        "A layout model that describes the content, padding, border, and margin of an element",
+        "A type of selector",
+        "A way to create boxes in CSS",
+      ],
+      correct: 1,
+      difficulty: "beginner",
+    },
+    {
+      question: "What is the difference between 'display: none' and 'visibility: hidden'?",
+      options: [
+        "No difference",
+        "'display: none' removes the element from the flow, 'visibility: hidden' hides it but keeps the space",
+        "'visibility: hidden' is faster",
+        "'display: none' is deprecated",
+      ],
+      correct: 1,
+      difficulty: "intermediate",
+    },
+    {
+      question: "What is a CSS preprocessor?",
+      options: [
+        "A tool that processes CSS before the browser",
+        "A scripting language that extends CSS with variables, nesting, and more",
+        "A type of CSS framework",
+        "A tool for compressing CSS",
+      ],
+      correct: 1,
+      difficulty: "advanced",
+    },
+    {
+      question: "What is CSS Grid?",
+      options: ["A grid-based layout system", "A CSS framework", "A type of selector", "A way to create tables in CSS"],
+      correct: 0,
+      difficulty: "intermediate",
+    },
   ],
 }
 
+// Function to attempt AI question generation with error handling
 async function generateAIQuestions(skill: string, count = 5) {
   try {
     console.log(`Attempting to generate ${count} AI questions for ${skill}...`)
+
+    // Check if we have API access before attempting to call OpenAI
+    const hasApiAccess = await checkApiAccess()
+    if (!hasApiAccess) {
+      console.log("OpenAI API access is not available or quota exceeded")
+      return { questions: [], error: "API quota exceeded or not available" }
+    }
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
@@ -383,16 +573,42 @@ Focus on real-world usage and practical understanding rather than memorization.`
     })
 
     console.log(`Generated ${validQuestions.length} valid AI questions for ${skill}`)
-    return validQuestions
+    return { questions: validQuestions, error: null }
   } catch (error) {
     console.error(`Failed to generate AI questions for ${skill}:`, error)
-    return []
+    return {
+      questions: [],
+      error: error.message.includes("quota") ? "API quota exceeded" : `Failed to generate questions: ${error.message}`,
+    }
+  }
+}
+
+// Function to check if we have API access
+async function checkApiAccess() {
+  try {
+    // Simple check to see if we can access the API
+    // This is a lightweight call that won't consume much quota
+    const response = await fetch("https://api.openai.com/v1/models", {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY || ""}`,
+      },
+    })
+
+    // If we get a 401 or 429, we don't have access
+    if (response.status === 401 || response.status === 429) {
+      return false
+    }
+
+    return response.ok
+  } catch (error) {
+    console.error("Error checking API access:", error)
+    return false
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { skill, answers, useAI = true } = await request.json()
+    const { skill, answers, useAI = false } = await request.json()
 
     if (!skill) {
       return NextResponse.json({ error: "Skill is required" }, { status: 400 })
@@ -405,15 +621,35 @@ export async function POST(request: NextRequest) {
     } else {
       // Generate or return questions for the skill
       let questions = []
+      let source = "static"
+      let aiAvailable = true
+      let aiError = null
+
+      // Check if the skill exists in our static questions
+      if (!SKILL_QUESTIONS[skill]) {
+        return NextResponse.json(
+          {
+            error: `No questions available for ${skill}`,
+          },
+          { status: 404 },
+        )
+      }
 
       if (useAI) {
-        console.log(`AI mode enabled for ${skill}`)
-        // Try to generate AI questions first
-        const aiQuestions = await generateAIQuestions(skill, 5)
+        console.log(`AI mode requested for ${skill}`)
+        // Try to generate AI questions
+        const { questions: aiQuestions, error } = await generateAIQuestions(skill, 5)
+
+        if (error) {
+          console.log(`AI generation error: ${error}`)
+          aiError = error
+          aiAvailable = error !== "API quota exceeded"
+        }
 
         if (aiQuestions.length >= 3) {
           // Use AI questions if we got at least 3 valid ones
           questions = aiQuestions
+          source = "ai"
           console.log(`Using ${aiQuestions.length} AI questions for ${skill}`)
         } else {
           // Fallback to static questions
@@ -426,25 +662,18 @@ export async function POST(request: NextRequest) {
         console.log(`Using ${questions.length} static questions for ${skill}`)
       }
 
-      // If we still don't have questions, create basic fallback
-      if (questions.length === 0) {
-        questions = [
-          {
-            question: `What is ${skill} primarily used for?`,
-            options: ["Web development", "Data analysis", "Mobile development", "All of the above"],
-            correct: 3,
-            difficulty: "beginner",
-          },
-          {
-            question: `Which of the following is a key feature of ${skill}?`,
-            options: ["Performance", "Scalability", "Flexibility", "All of the above"],
-            correct: 3,
-            difficulty: "beginner",
-          },
-        ]
+      // Ensure we have at least 5 questions
+      if (questions.length > 5) {
+        // Randomly select 5 questions for variety
+        questions = shuffleArray(questions).slice(0, 5)
       }
 
-      return NextResponse.json({ questions, source: useAI && questions.length > 0 ? "ai" : "static" })
+      return NextResponse.json({
+        questions,
+        source,
+        aiAvailable,
+        aiError,
+      })
     }
   } catch (error) {
     console.error("Skill assessment error:", error)
@@ -456,6 +685,16 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
+}
+
+// Helper function to shuffle an array
+function shuffleArray(array) {
+  const newArray = [...array]
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[newArray[i], newArray[j]] = [newArray[j], newArray[i]]
+  }
+  return newArray
 }
 
 function scoreAssessment(skill: string, answers: number[]) {

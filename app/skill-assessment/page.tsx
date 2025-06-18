@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -37,9 +37,41 @@ export default function SkillAssessmentPage() {
   const [showResult, setShowResult] = useState(false)
   const [result, setResult] = useState<AssessmentResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [useAI, setUseAI] = useState(true)
+  const [useAI, setUseAI] = useState(false) // Default to false to avoid quota issues
   const [error, setError] = useState("")
   const [questionSource, setQuestionSource] = useState<"ai" | "static">("static")
+  const [aiAvailable, setAiAvailable] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+
+  // Check AI availability on component mount
+  useEffect(() => {
+    checkAiAvailability()
+  }, [])
+
+  const checkAiAvailability = async () => {
+    try {
+      const response = await fetch("/api/skill-assessment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skill: "JavaScript", useAI: true }),
+      })
+
+      const data = await response.json()
+
+      if (data.aiAvailable === false) {
+        setAiAvailable(false)
+        setAiError(data.aiError || "AI generation unavailable")
+        setUseAI(false) // Force disable AI if not available
+      } else {
+        setAiAvailable(true)
+        setAiError(null)
+      }
+    } catch (error) {
+      console.error("Failed to check AI availability:", error)
+      setAiAvailable(false)
+      setUseAI(false)
+    }
+  }
 
   const startAssessment = async (skill: string) => {
     setIsLoading(true)
@@ -51,7 +83,7 @@ export default function SkillAssessmentPage() {
       const response = await fetch("/api/skill-assessment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skill, useAI }),
+        body: JSON.stringify({ skill, useAI: useAI && aiAvailable }),
       })
 
       if (!response.ok) {
@@ -73,6 +105,12 @@ export default function SkillAssessmentPage() {
       setAnswers([])
       setSelectedAnswer(null)
       setShowResult(false)
+
+      // Update AI availability if it changed
+      if (data.aiAvailable === false && aiAvailable) {
+        setAiAvailable(false)
+        setAiError(data.aiError || "AI generation unavailable")
+      }
     } catch (error) {
       console.error("Failed to load questions:", error)
       setError(`Failed to load questions: ${error.message}`)
@@ -331,32 +369,42 @@ export default function SkillAssessmentPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">AI-Powered Skill Assessment</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Skill Assessment</h2>
             <p className="text-gray-600 mb-4">
-              Test your knowledge with dynamically generated questions and get personalized recommendations
+              Test your knowledge with our curated questions and get personalized recommendations
             </p>
 
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="useAI"
-                  checked={useAI}
-                  onChange={(e) => setUseAI(e.target.checked)}
-                  className="rounded"
-                />
-                <label htmlFor="useAI" className="text-sm font-medium">
-                  Use AI-Generated Questions
-                </label>
-                <Sparkles className="h-4 w-4 text-blue-600" />
+            {aiAvailable ? (
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="useAI"
+                    checked={useAI}
+                    onChange={(e) => setUseAI(e.target.checked)}
+                    className="rounded"
+                  />
+                  <label htmlFor="useAI" className="text-sm font-medium">
+                    Use AI-Generated Questions
+                  </label>
+                  <Sparkles className="h-4 w-4 text-blue-600" />
+                </div>
               </div>
-            </div>
+            ) : (
+              <Alert className="mb-6 max-w-lg mx-auto">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <span className="font-medium">AI question generation is currently unavailable.</span>
+                  {aiError && <span className="block text-sm mt-1 text-gray-500">{aiError}</span>}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           <Alert className="mb-8">
             <Brain className="h-4 w-4" />
             <AlertDescription>
-              {useAI ? (
+              {useAI && aiAvailable ? (
                 <>
                   <strong>AI Mode:</strong> Each assessment features unique, dynamically generated questions tailored to
                   test your understanding of key concepts. Questions are created fresh every time!
@@ -378,7 +426,7 @@ export default function SkillAssessmentPage() {
                     {skill}
                     <div className="flex gap-1">
                       <Badge variant="outline">Quiz</Badge>
-                      {useAI && (
+                      {useAI && aiAvailable && (
                         <Badge variant="outline" className="text-xs">
                           <Sparkles className="h-3 w-3 mr-1" />
                           AI
@@ -387,7 +435,7 @@ export default function SkillAssessmentPage() {
                     </div>
                   </CardTitle>
                   <CardDescription>
-                    Test your {skill} knowledge with {useAI ? "AI-generated" : "curated"} questions
+                    Test your {skill} knowledge with {useAI && aiAvailable ? "AI-generated" : "curated"} questions
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -395,7 +443,7 @@ export default function SkillAssessmentPage() {
                     {isLoading ? (
                       <>
                         <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        {useAI ? "Generating Questions..." : "Loading..."}
+                        {useAI && aiAvailable ? "Generating Questions..." : "Loading..."}
                       </>
                     ) : (
                       "Start Assessment"
@@ -409,13 +457,15 @@ export default function SkillAssessmentPage() {
           <div className="mt-12 text-center">
             <h3 className="text-xl font-semibold mb-4">Enhanced Assessment Features</h3>
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="p-6 bg-white rounded-lg shadow-sm">
-                <Sparkles className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-                <h4 className="font-medium mb-2">AI-Generated Questions</h4>
-                <p className="text-sm text-gray-600">
-                  Fresh, unique questions generated for each assessment using advanced AI
-                </p>
-              </div>
+              {aiAvailable && (
+                <div className="p-6 bg-white rounded-lg shadow-sm">
+                  <Sparkles className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+                  <h4 className="font-medium mb-2">AI-Generated Questions</h4>
+                  <p className="text-sm text-gray-600">
+                    Fresh, unique questions generated for each assessment using advanced AI
+                  </p>
+                </div>
+              )}
               <div className="p-6 bg-white rounded-lg shadow-sm">
                 <Target className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                 <h4 className="font-medium mb-2">Adaptive Difficulty</h4>
@@ -428,6 +478,13 @@ export default function SkillAssessmentPage() {
                 <h4 className="font-medium mb-2">Smart Recommendations</h4>
                 <p className="text-sm text-gray-600">
                   Get personalized learning paths based on your performance and skill gaps
+                </p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-sm">
+                <RefreshCw className="h-8 w-8 text-orange-600 mx-auto mb-3" />
+                <h4 className="font-medium mb-2">Varied Question Bank</h4>
+                <p className="text-sm text-gray-600">
+                  Extensive library of questions covering all aspects of each technology
                 </p>
               </div>
             </div>
