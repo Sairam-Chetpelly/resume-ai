@@ -20,8 +20,6 @@ interface AnalysisResult {
   missingSkills: string[]
   recommendations: string[]
   jobMatchScore: number
-  isDemoMode?: boolean
-  demoReason?: string
 }
 
 export default function AnalyzePage() {
@@ -87,45 +85,58 @@ export default function AnalyzePage() {
     setAnalysis(null)
 
     try {
-      console.log("Starting resume analysis...")
+      console.log("=== Starting Resume Analysis ===")
+      console.log("Resume text length:", resumeText.length)
+      console.log("Job description length:", jobDescription.length)
+
+      const requestBody = {
+        resumeText: resumeText.trim(),
+        jobDescription: jobDescription.trim() || undefined,
+      }
+
+      console.log("Sending request to API...")
 
       const response = await fetch("/api/analyze-resume", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          resumeText: resumeText.trim(),
-          jobDescription: jobDescription.trim() || undefined,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       console.log("API response status:", response.status)
+      console.log("API response headers:", Object.fromEntries(response.headers.entries()))
 
-      // Handle response
       if (response.ok) {
+        console.log("Response OK, parsing JSON...")
         const result = await response.json()
-        console.log("Analysis result received:", result.isDemoMode ? "Demo Mode" : "Real AI")
+        console.log("Analysis result received:", result)
 
         if (result.error) {
           throw new Error(result.error)
         }
 
         setAnalysis(result)
-        setError("") // Clear any previous errors
+        setError("")
+        console.log("✓ Analysis completed successfully")
       } else {
-        // Handle non-200 responses
-        let errorMessage = "Analysis failed"
+        console.error("Response not OK:", response.status)
+
+        let errorMessage = `Server error (${response.status})`
         try {
           const errorData = await response.json()
           errorMessage = errorData.error || errorMessage
-        } catch {
-          errorMessage = `Server error (${response.status})`
+          console.error("Error response data:", errorData)
+        } catch (jsonError) {
+          console.error("Failed to parse error response:", jsonError)
+          const textResponse = await response.text()
+          console.error("Raw error response:", textResponse)
         }
+
         throw new Error(errorMessage)
       }
     } catch (err) {
-      console.error("Analysis error:", err)
+      console.error("=== Analysis Error ===", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to analyze resume"
       setError(`${errorMessage}. Please try again.`)
     } finally {
@@ -162,6 +173,7 @@ JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
 
     setResumeText(sampleText)
     setError("")
+    console.log("Sample resume loaded")
   }
 
   return (
@@ -248,29 +260,12 @@ JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
               </Card>
 
               {/* Status Messages */}
-              {analysis?.isDemoMode && (
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Demo Mode Active:</strong> {analysis.demoReason}
-                    <br />
-                    <span className="text-sm text-gray-600 mt-1">
-                      This analysis uses smart algorithms based on your actual resume content. The results are realistic
-                      and helpful for improving your resume!
-                    </span>
-                  </AlertDescription>
+              {error && !error.includes("PDF") && !error.includes("extracted successfully") && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-
-              {error &&
-                !analysis?.isDemoMode &&
-                !error.includes("PDF") &&
-                !error.includes("extracted successfully") && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
 
               {error && (error.includes("PDF") || error.includes("extracted successfully")) && (
                 <Alert>
@@ -298,25 +293,13 @@ JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
             <div>
               {analysis ? (
                 <div className="space-y-6">
-                  {analysis.isDemoMode && (
-                    <Alert>
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>Demo Analysis:</strong> This analysis uses intelligent algorithms based on your actual
-                        resume content. Results are realistic and helpful for improving your resume!
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  {!analysis.isDemoMode && (
-                    <Alert>
-                      <CheckCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>AI Analysis Complete:</strong> This analysis was generated using OpenAI's advanced AI
-                        technology.
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <Alert>
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Analysis Complete:</strong> Your resume has been thoroughly analyzed using advanced AI
+                      algorithms.
+                    </AlertDescription>
+                  </Alert>
 
                   <Card>
                     <CardHeader>
