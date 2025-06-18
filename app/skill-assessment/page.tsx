@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Brain, CheckCircle, X, Trophy, Target } from "lucide-react"
+import { Brain, CheckCircle, X, Trophy, Target, Sparkles, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/layout/header"
 
@@ -26,7 +26,18 @@ interface AssessmentResult {
   recommendations: string[]
 }
 
-const AVAILABLE_SKILLS = ["JavaScript", "React", "Python", "Node.js", "SQL"]
+const AVAILABLE_SKILLS = [
+  "JavaScript",
+  "React",
+  "Python",
+  "Node.js",
+  "SQL",
+  "TypeScript",
+  "CSS",
+  "MongoDB",
+  "Express.js",
+  "Vue.js",
+]
 
 export default function SkillAssessmentPage() {
   const [selectedSkill, setSelectedSkill] = useState("")
@@ -37,14 +48,23 @@ export default function SkillAssessmentPage() {
   const [showResult, setShowResult] = useState(false)
   const [result, setResult] = useState<AssessmentResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [useAI, setUseAI] = useState(true)
+  const [sessionId, setSessionId] = useState("")
+
+  const generateSessionId = () => {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9)
+  }
 
   const startAssessment = async (skill: string) => {
     setIsLoading(true)
+    const newSessionId = generateSessionId()
+    setSessionId(newSessionId)
+
     try {
       const response = await fetch("/api/skill-assessment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skill }),
+        body: JSON.stringify({ skill, useAI }),
       })
 
       if (response.ok) {
@@ -55,6 +75,13 @@ export default function SkillAssessmentPage() {
         setAnswers([])
         setSelectedAnswer(null)
         setShowResult(false)
+
+        // Store questions in session for accurate scoring
+        await fetch("/api/skill-assessment-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: newSessionId, questions: data.questions }),
+        })
       }
     } catch (error) {
       console.error("Failed to load questions:", error)
@@ -80,16 +107,38 @@ export default function SkillAssessmentPage() {
   const finishAssessment = async (finalAnswers: number[]) => {
     setIsLoading(true)
     try {
-      const response = await fetch("/api/skill-assessment", {
+      // Get accurate scoring from session
+      const sessionResponse = await fetch("/api/skill-assessment-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skill: selectedSkill, answers: finalAnswers }),
+        body: JSON.stringify({ sessionId, answers: finalAnswers }),
       })
 
-      if (response.ok) {
-        const result = await response.json()
-        setResult(result)
-        setShowResult(true)
+      if (sessionResponse.ok) {
+        const sessionData = await sessionResponse.json()
+
+        // Generate final result with recommendations
+        const response = await fetch("/api/skill-assessment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ skill: selectedSkill, answers: finalAnswers }),
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          // Override with accurate scoring
+          result.correct = sessionData.correct
+          result.total = sessionData.total
+          result.score = sessionData.percentage
+
+          // Update level based on accurate score
+          if (sessionData.percentage >= 80) result.level = "Advanced"
+          else if (sessionData.percentage >= 60) result.level = "Intermediate"
+          else result.level = "Beginner"
+
+          setResult(result)
+          setShowResult(true)
+        }
       }
     } catch (error) {
       console.error("Failed to submit assessment:", error)
@@ -106,6 +155,7 @@ export default function SkillAssessmentPage() {
     setSelectedAnswer(null)
     setShowResult(false)
     setResult(null)
+    setSessionId("")
   }
 
   if (showResult && result) {
@@ -121,7 +171,15 @@ export default function SkillAssessmentPage() {
                   <Trophy className="h-16 w-16 text-yellow-500 mx-auto" />
                 </div>
                 <CardTitle className="text-2xl">Assessment Complete!</CardTitle>
-                <CardDescription>Here are your {result.skill} assessment results</CardDescription>
+                <CardDescription>
+                  Here are your {result.skill} assessment results
+                  {useAI && (
+                    <Badge variant="outline" className="ml-2">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      AI Generated
+                    </Badge>
+                  )}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="text-center">
@@ -152,7 +210,7 @@ export default function SkillAssessmentPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Recommendations</CardTitle>
+                    <CardTitle className="text-lg">Personalized Recommendations</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
@@ -168,6 +226,7 @@ export default function SkillAssessmentPage() {
 
                 <div className="flex gap-3">
                   <Button onClick={resetAssessment} className="flex-1">
+                    <RefreshCw className="mr-2 h-4 w-4" />
                     Take Another Assessment
                   </Button>
                   <Button variant="outline" asChild className="flex-1">
@@ -194,8 +253,18 @@ export default function SkillAssessmentPage() {
           <div className="max-w-2xl mx-auto">
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-semibold">{selectedSkill} Assessment</h2>
-                <span className="text-sm text-gray-600">{Math.round(progress)}% Complete</span>
+                <h2 className="text-lg font-semibold">
+                  {selectedSkill} Assessment
+                  {useAI && (
+                    <Badge variant="outline" className="ml-2">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      AI Generated
+                    </Badge>
+                  )}
+                </h2>
+                <span className="text-sm text-gray-600">
+                  Question {currentQuestion + 1} of {questions.length}
+                </span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
@@ -241,7 +310,7 @@ export default function SkillAssessmentPage() {
                     Cancel
                   </Button>
                   <Button onClick={submitAnswer} disabled={selectedAnswer === null || isLoading}>
-                    {currentQuestion + 1 === questions.length ? "Finish" : "Next Question"}
+                    {currentQuestion + 1 === questions.length ? "Finish Assessment" : "Next Question"}
                   </Button>
                 </div>
               </CardContent>
@@ -259,17 +328,42 @@ export default function SkillAssessmentPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Skill Assessment</h2>
-            <p className="text-gray-600">
-              Test your knowledge and get personalized recommendations to improve your skills
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">AI-Powered Skill Assessment</h2>
+            <p className="text-gray-600 mb-4">
+              Test your knowledge with dynamically generated questions and get personalized recommendations
             </p>
+
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="useAI"
+                  checked={useAI}
+                  onChange={(e) => setUseAI(e.target.checked)}
+                  className="rounded"
+                />
+                <label htmlFor="useAI" className="text-sm font-medium">
+                  Use AI-Generated Questions
+                </label>
+                <Sparkles className="h-4 w-4 text-blue-600" />
+              </div>
+            </div>
           </div>
 
           <Alert className="mb-8">
             <Brain className="h-4 w-4" />
             <AlertDescription>
-              Each assessment contains multiple-choice questions designed to evaluate your understanding of key
-              concepts. Results include personalized learning recommendations.
+              {useAI ? (
+                <>
+                  <strong>AI Mode:</strong> Each assessment features unique, dynamically generated questions tailored to
+                  test your understanding of key concepts. Questions are created fresh every time!
+                </>
+              ) : (
+                <>
+                  <strong>Standard Mode:</strong> Assessment uses our curated question bank with proven questions
+                  designed to evaluate your understanding of key concepts.
+                </>
+              )}
             </AlertDescription>
           </Alert>
 
@@ -279,13 +373,30 @@ export default function SkillAssessmentPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     {skill}
-                    <Badge variant="outline">Quiz</Badge>
+                    <div className="flex gap-1">
+                      <Badge variant="outline">Quiz</Badge>
+                      {useAI && (
+                        <Badge variant="outline" className="text-xs">
+                          <Sparkles className="h-3 w-3 mr-1" />
+                          AI
+                        </Badge>
+                      )}
+                    </div>
                   </CardTitle>
-                  <CardDescription>Test your {skill} knowledge with interactive questions</CardDescription>
+                  <CardDescription>
+                    Test your {skill} knowledge with {useAI ? "AI-generated" : "curated"} questions
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button onClick={() => startAssessment(skill)} disabled={isLoading} className="w-full">
-                    {isLoading ? "Loading..." : "Start Assessment"}
+                    {isLoading ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        {useAI ? "Generating Questions..." : "Loading..."}
+                      </>
+                    ) : (
+                      "Start Assessment"
+                    )}
                   </Button>
                 </CardContent>
               </Card>
@@ -293,22 +404,28 @@ export default function SkillAssessmentPage() {
           </div>
 
           <div className="mt-12 text-center">
-            <h3 className="text-xl font-semibold mb-4">Why Take Skill Assessments?</h3>
+            <h3 className="text-xl font-semibold mb-4">Enhanced Assessment Features</h3>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="p-6 bg-white rounded-lg shadow-sm">
+                <Sparkles className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+                <h4 className="font-medium mb-2">AI-Generated Questions</h4>
+                <p className="text-sm text-gray-600">
+                  Fresh, unique questions generated for each assessment using advanced AI
+                </p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-sm">
                 <Target className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <h4 className="font-medium mb-2">Identify Knowledge Gaps</h4>
-                <p className="text-sm text-gray-600">Discover areas where you need to focus your learning efforts</p>
+                <h4 className="font-medium mb-2">Adaptive Difficulty</h4>
+                <p className="text-sm text-gray-600">
+                  Questions span beginner to advanced levels to accurately assess your skills
+                </p>
               </div>
               <div className="p-6 bg-white rounded-lg shadow-sm">
-                <Trophy className="h-8 w-8 text-yellow-600 mx-auto mb-3" />
-                <h4 className="font-medium mb-2">Validate Your Skills</h4>
-                <p className="text-sm text-gray-600">Get objective feedback on your current skill level</p>
-              </div>
-              <div className="p-6 bg-white rounded-lg shadow-sm">
-                <Brain className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-                <h4 className="font-medium mb-2">Personalized Learning</h4>
-                <p className="text-sm text-gray-600">Receive tailored recommendations for skill improvement</p>
+                <Brain className="h-8 w-8 text-green-600 mx-auto mb-3" />
+                <h4 className="font-medium mb-2">Smart Recommendations</h4>
+                <p className="text-sm text-gray-600">
+                  Get personalized learning paths based on your performance and skill gaps
+                </p>
               </div>
             </div>
           </div>

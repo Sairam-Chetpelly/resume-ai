@@ -9,14 +9,14 @@
     "start": "next start"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^0.0.66",
+    "@ai-sdk/openai": "latest",
     "@radix-ui/react-dialog": "latest",
     "@radix-ui/react-label": "latest",
     "@radix-ui/react-progress": "latest",
     "@radix-ui/react-select": "latest",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "latest",
-    "ai": "^4.0.0",
+    "ai": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.454.0",
