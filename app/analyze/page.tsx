@@ -20,8 +20,6 @@ interface AnalysisResult {
   missingSkills: string[]
   recommendations: string[]
   jobMatchScore: number
-  isDemoMode?: boolean
-  demoReason?: string
 }
 
 export default function AnalyzePage() {
@@ -87,7 +85,7 @@ export default function AnalyzePage() {
     setAnalysis(null)
 
     try {
-      console.log("Starting resume analysis...")
+      console.log("Starting analysis...")
 
       const response = await fetch("/api/analyze-resume", {
         method: "POST",
@@ -100,68 +98,114 @@ export default function AnalyzePage() {
         }),
       })
 
-      console.log("API response status:", response.status)
+      console.log("Response status:", response.status)
 
-      // Handle response
       if (response.ok) {
         const result = await response.json()
-        console.log("Analysis result received:", result.isDemoMode ? "Demo Mode" : "Real AI")
-
-        if (result.error) {
-          throw new Error(result.error)
-        }
-
+        console.log("Analysis completed:", result)
         setAnalysis(result)
-        setError("") // Clear any previous errors
+        setError("")
       } else {
-        // Handle non-200 responses
-        let errorMessage = "Analysis failed"
-        try {
-          const errorData = await response.json()
-          errorMessage = errorData.error || errorMessage
-        } catch {
-          errorMessage = `Server error (${response.status})`
-        }
-        throw new Error(errorMessage)
+        console.error("Response not OK:", response.status)
+        throw new Error(`Server error (${response.status})`)
       }
     } catch (err) {
       console.error("Analysis error:", err)
-      const errorMessage = err instanceof Error ? err.message : "Failed to analyze resume"
-      setError(`${errorMessage}. Please try again.`)
+      setError("Analysis failed. Please try again.")
     } finally {
       setIsAnalyzing(false)
     }
   }
 
-  // Sample resume text for testing
+  // Sample resume for PHP developer
   const loadSampleResume = () => {
-    const sampleText = `John Doe
-Software Engineer
-Email: john.doe@email.com | Phone: (555) 123-4567
+    const sampleText = `John Smith
+PHP Laravel Developer
+Email: john.smith@email.com | Phone: (555) 123-4567
 
 PROFESSIONAL SUMMARY
-Experienced software engineer with 5+ years developing web applications using JavaScript, React, and Node.js. Led team of 4 developers and increased application performance by 40%.
+Experienced PHP Laravel developer with 4+ years building web applications. Led development of e-commerce platform serving 50k+ users and improved application performance by 35%.
 
 EXPERIENCE
-Senior Software Engineer | Tech Company | 2020-2024
-• Developed and maintained React applications serving 100k+ users
-• Implemented CI/CD pipelines reducing deployment time by 60%
-• Led code reviews and mentored junior developers
-• Built RESTful APIs using Node.js and Express
+Senior PHP Developer | WebTech Solutions | 2021-2024
+• Developed and maintained Laravel applications with 100k+ monthly users
+• Built RESTful APIs using Laravel and integrated with Vue.js frontend
+• Implemented MySQL database optimization reducing query time by 40%
+• Led team of 3 junior developers and conducted code reviews
+• Deployed applications using Docker and AWS EC2
 
-Software Engineer | StartupCo | 2018-2020
-• Created responsive web applications using HTML, CSS, JavaScript
+PHP Developer | StartupCorp | 2020-2021
+• Created responsive web applications using PHP, Laravel, HTML, CSS, JavaScript
 • Collaborated with design team to implement user interfaces
+• Integrated payment gateways and third-party APIs
 • Optimized database queries improving response time by 25%
 
 EDUCATION
-Bachelor of Science in Computer Science | University Name | 2018
+Bachelor of Science in Computer Science | Tech University | 2020
 
 SKILLS
-JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
+PHP, Laravel, MySQL, JavaScript, Vue.js, HTML, CSS, Git, Docker, AWS, REST API, Composer, Bootstrap`
 
     setResumeText(sampleText)
     setError("")
+  }
+
+  // Sample Java job description
+  const loadJavaJob = () => {
+    const javaJob = `Senior Java Developer Position
+
+We are looking for an experienced Java developer to join our team.
+
+Requirements:
+- 3+ years of Java development experience
+- Strong knowledge of Spring Framework and Spring Boot
+- Experience with Maven or Gradle build tools
+- Proficiency in SQL and database design (MySQL, PostgreSQL)
+- Knowledge of RESTful web services and microservices architecture
+- Experience with Git version control
+- Familiarity with Docker and containerization
+- Understanding of Agile development methodologies
+- Experience with JUnit testing framework
+- Knowledge of AWS cloud services is a plus
+
+Responsibilities:
+- Develop and maintain Java applications using Spring Boot
+- Design and implement RESTful APIs
+- Work with databases and optimize SQL queries
+- Collaborate with cross-functional teams
+- Write unit tests and ensure code quality
+- Deploy applications to cloud environments`
+
+    setJobDescription(javaJob)
+  }
+
+  // Sample PHP job description
+  const loadPHPJob = () => {
+    const phpJob = `Senior PHP Laravel Developer Position
+
+We are seeking a skilled PHP Laravel developer to join our development team.
+
+Requirements:
+- 3+ years of PHP development experience
+- Strong expertise in Laravel framework
+- Proficiency in MySQL database design and optimization
+- Experience with JavaScript and Vue.js or React
+- Knowledge of RESTful API development
+- Familiarity with Git version control
+- Experience with Docker and AWS deployment
+- Understanding of Agile development practices
+- Knowledge of Composer and package management
+- Experience with HTML, CSS, and responsive design
+
+Responsibilities:
+- Develop and maintain Laravel web applications
+- Build RESTful APIs and integrate with frontend frameworks
+- Optimize database queries and application performance
+- Collaborate with frontend developers and designers
+- Deploy applications to cloud environments
+- Conduct code reviews and mentor junior developers`
+
+    setJobDescription(phpJob)
   }
 
   return (
@@ -218,7 +262,7 @@ JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
                   <div className="flex items-center justify-between">
                     <Label htmlFor="resume-text">Or Paste Resume Text</Label>
                     <Button variant="outline" size="sm" onClick={loadSampleResume} type="button">
-                      Load Sample Resume
+                      Load PHP Developer Resume
                     </Button>
                   </div>
                   <Textarea
@@ -237,7 +281,15 @@ JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
                   <CardTitle>Job Description (Optional)</CardTitle>
                   <CardDescription>Add a job description for targeted analysis</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2 mb-2">
+                    <Button variant="outline" size="sm" onClick={loadJavaJob} type="button">
+                      Load Java Job
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={loadPHPJob} type="button">
+                      Load PHP Job
+                    </Button>
+                  </div>
                   <Textarea
                     placeholder="Paste the job description you're targeting..."
                     value={jobDescription}
@@ -248,29 +300,12 @@ JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
               </Card>
 
               {/* Status Messages */}
-              {analysis?.isDemoMode && (
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Demo Mode Active:</strong> {analysis.demoReason}
-                    <br />
-                    <span className="text-sm text-gray-600 mt-1">
-                      This analysis uses smart algorithms based on your actual resume content. The results are realistic
-                      and helpful for improving your resume!
-                    </span>
-                  </AlertDescription>
+              {error && !error.includes("PDF") && !error.includes("extracted successfully") && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-
-              {error &&
-                !analysis?.isDemoMode &&
-                !error.includes("PDF") &&
-                !error.includes("extracted successfully") && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
 
               {error && (error.includes("PDF") || error.includes("extracted successfully")) && (
                 <Alert>
@@ -298,25 +333,13 @@ JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
             <div>
               {analysis ? (
                 <div className="space-y-6">
-                  {analysis.isDemoMode && (
-                    <Alert>
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>Demo Analysis:</strong> This analysis uses intelligent algorithms based on your actual
-                        resume content. Results are realistic and helpful for improving your resume!
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  {!analysis.isDemoMode && (
-                    <Alert>
-                      <CheckCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>AI Analysis Complete:</strong> This analysis was generated using OpenAI's advanced AI
-                        technology.
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <Alert>
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Analysis Complete:</strong> Your resume has been thoroughly analyzed using advanced AI
+                      algorithms.
+                    </AlertDescription>
+                  </Alert>
 
                   <Card>
                     <CardHeader>
@@ -342,7 +365,13 @@ JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
                           <div className="flex items-center">
                             <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                               <div
-                                className="bg-green-600 h-2 rounded-full transition-all duration-500"
+                                className={`h-2 rounded-full transition-all duration-500 ${
+                                  analysis.jobMatchScore >= 70
+                                    ? "bg-green-600"
+                                    : analysis.jobMatchScore >= 50
+                                      ? "bg-yellow-600"
+                                      : "bg-red-600"
+                                }`}
                                 style={{ width: `${analysis.jobMatchScore}%` }}
                               ></div>
                             </div>
@@ -438,7 +467,9 @@ JavaScript, React, Node.js, Python, SQL, Git, Docker, AWS, MongoDB, HTML, CSS`
                   <CardContent className="text-center py-12">
                     <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500 mb-4">Upload your resume to see analysis results here</p>
-                    <p className="text-sm text-gray-400">Try the "Load Sample Resume" button to see how it works</p>
+                    <p className="text-sm text-gray-400">
+                      Try the "Load PHP Developer Resume" button to see how it works
+                    </p>
                   </CardContent>
                 </Card>
               )}
