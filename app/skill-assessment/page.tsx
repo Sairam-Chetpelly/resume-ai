@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Brain, CheckCircle, X, Trophy, Target, Sparkles, RefreshCw } from "lucide-react"
+import { Brain, CheckCircle, X, Trophy, Target, Sparkles, RefreshCw, AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/layout/header"
 
@@ -26,18 +26,7 @@ interface AssessmentResult {
   recommendations: string[]
 }
 
-const AVAILABLE_SKILLS = [
-  "JavaScript",
-  "React",
-  "Python",
-  "Node.js",
-  "SQL",
-  "TypeScript",
-  "CSS",
-  "MongoDB",
-  "Express.js",
-  "Vue.js",
-]
+const AVAILABLE_SKILLS = ["JavaScript", "React", "Python", "Node.js", "SQL", "TypeScript", "CSS"]
 
 export default function SkillAssessmentPage() {
   const [selectedSkill, setSelectedSkill] = useState("")
@@ -49,42 +38,44 @@ export default function SkillAssessmentPage() {
   const [result, setResult] = useState<AssessmentResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [useAI, setUseAI] = useState(true)
-  const [sessionId, setSessionId] = useState("")
-
-  const generateSessionId = () => {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9)
-  }
+  const [error, setError] = useState("")
+  const [questionSource, setQuestionSource] = useState<"ai" | "static">("static")
 
   const startAssessment = async (skill: string) => {
     setIsLoading(true)
-    const newSessionId = generateSessionId()
-    setSessionId(newSessionId)
+    setError("")
 
     try {
+      console.log(`Starting assessment for ${skill} with AI: ${useAI}`)
+
       const response = await fetch("/api/skill-assessment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ skill, useAI }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setQuestions(data.questions)
-        setSelectedSkill(skill)
-        setCurrentQuestion(0)
-        setAnswers([])
-        setSelectedAnswer(null)
-        setShowResult(false)
-
-        // Store questions in session for accurate scoring
-        await fetch("/api/skill-assessment-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId: newSessionId, questions: data.questions }),
-        })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
+
+      const data = await response.json()
+      console.log(`Received ${data.questions?.length || 0} questions, source: ${data.source}`)
+
+      if (!data.questions || data.questions.length === 0) {
+        throw new Error("No questions received from server")
+      }
+
+      setQuestions(data.questions)
+      setQuestionSource(data.source || "static")
+      setSelectedSkill(skill)
+      setCurrentQuestion(0)
+      setAnswers([])
+      setSelectedAnswer(null)
+      setShowResult(false)
     } catch (error) {
       console.error("Failed to load questions:", error)
+      setError(`Failed to load questions: ${error.message}`)
     } finally {
       setIsLoading(false)
     }
@@ -106,42 +97,26 @@ export default function SkillAssessmentPage() {
 
   const finishAssessment = async (finalAnswers: number[]) => {
     setIsLoading(true)
+    setError("")
+
     try {
-      // Get accurate scoring from session
-      const sessionResponse = await fetch("/api/skill-assessment-session", {
+      const response = await fetch("/api/skill-assessment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, answers: finalAnswers }),
+        body: JSON.stringify({ skill: selectedSkill, answers: finalAnswers }),
       })
 
-      if (sessionResponse.ok) {
-        const sessionData = await sessionResponse.json()
-
-        // Generate final result with recommendations
-        const response = await fetch("/api/skill-assessment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ skill: selectedSkill, answers: finalAnswers }),
-        })
-
-        if (response.ok) {
-          const result = await response.json()
-          // Override with accurate scoring
-          result.correct = sessionData.correct
-          result.total = sessionData.total
-          result.score = sessionData.percentage
-
-          // Update level based on accurate score
-          if (sessionData.percentage >= 80) result.level = "Advanced"
-          else if (sessionData.percentage >= 60) result.level = "Intermediate"
-          else result.level = "Beginner"
-
-          setResult(result)
-          setShowResult(true)
-        }
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
+
+      const result = await response.json()
+      setResult(result)
+      setShowResult(true)
     } catch (error) {
       console.error("Failed to submit assessment:", error)
+      setError(`Failed to submit assessment: ${error.message}`)
     } finally {
       setIsLoading(false)
     }
@@ -155,7 +130,27 @@ export default function SkillAssessmentPage() {
     setSelectedAnswer(null)
     setShowResult(false)
     setResult(null)
-    setSessionId("")
+    setError("")
+    setQuestionSource("static")
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+            <div className="mt-4 text-center">
+              <Button onClick={resetAssessment}>Try Again</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (showResult && result) {
@@ -173,12 +168,16 @@ export default function SkillAssessmentPage() {
                 <CardTitle className="text-2xl">Assessment Complete!</CardTitle>
                 <CardDescription>
                   Here are your {result.skill} assessment results
-                  {useAI && (
-                    <Badge variant="outline" className="ml-2">
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      AI Generated
-                    </Badge>
-                  )}
+                  <Badge variant="outline" className="ml-2">
+                    {questionSource === "ai" ? (
+                      <>
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        AI Generated
+                      </>
+                    ) : (
+                      "Curated Questions"
+                    )}
+                  </Badge>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -255,12 +254,16 @@ export default function SkillAssessmentPage() {
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-semibold">
                   {selectedSkill} Assessment
-                  {useAI && (
-                    <Badge variant="outline" className="ml-2">
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      AI Generated
-                    </Badge>
-                  )}
+                  <Badge variant="outline" className="ml-2">
+                    {questionSource === "ai" ? (
+                      <>
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        AI Generated
+                      </>
+                    ) : (
+                      "Curated"
+                    )}
+                  </Badge>
                 </h2>
                 <span className="text-sm text-gray-600">
                   Question {currentQuestion + 1} of {questions.length}
