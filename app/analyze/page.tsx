@@ -1,16 +1,19 @@
 "use client"
 
+import { Textarea } from "@/components/ui/textarea"
+
 import type React from "react"
 
 import { useState } from "react"
 import { Upload, FileText, Loader2, Brain, AlertTriangle, CheckCircle, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
+import { ResumeInputGuide } from "@/components/resume-input-guide"
+import { EnhancedTextarea } from "@/components/enhanced-textarea"
 
 interface AnalysisResult {
   overallScore: number
@@ -35,32 +38,10 @@ export default function AnalyzePage() {
     if (!file) return
 
     if (file.type === "application/pdf") {
-      setIsExtractingPdf(true)
-      setError("")
-
-      try {
-        const formData = new FormData()
-        formData.append("file", file)
-
-        const response = await fetch("/api/extract-pdf", {
-          method: "POST",
-          body: formData,
-        })
-
-        const result = await response.json()
-
-        if (result.success) {
-          setResumeText(result.text)
-          setError("PDF text extracted successfully. Please review and edit the text below if needed.")
-        } else {
-          setError(result.error || "Failed to extract text from PDF")
-        }
-      } catch (err) {
-        console.error("PDF extraction error:", err)
-        setError("Failed to process PDF file. Please try copying and pasting the text manually.")
-      } finally {
-        setIsExtractingPdf(false)
-      }
+      setError(
+        "PDF upload is currently disabled due to reliability issues. Please copy and paste your resume text in the text area below for the best analysis results.",
+      )
+      return
     } else if (file.type === "text/plain") {
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -232,6 +213,8 @@ Responsibilities:
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Input Section */}
             <div className="space-y-6">
+              <ResumeInputGuide />
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -242,36 +225,29 @@ Responsibilities:
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="resume-file">Upload Resume File (PDF or TXT)</Label>
-                    <Input
-                      id="resume-file"
-                      type="file"
-                      accept=".txt,.pdf"
-                      onChange={handleFileUpload}
-                      className="mt-1"
-                      disabled={isExtractingPdf}
-                    />
-                    {isExtractingPdf && (
-                      <div className="flex items-center mt-2 text-sm text-gray-600">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Extracting text from PDF...
-                      </div>
-                    )}
+                    <Label htmlFor="resume-file">Upload Text File</Label>
+                    <Input id="resume-file" type="file" accept=".txt" onChange={handleFileUpload} className="mt-1" />
+                  </div>
+
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-1">💡 Pro Tip</h4>
+                    <p className="text-sm text-blue-800">
+                      For the most accurate analysis, copy and paste your resume text directly. This ensures all
+                      formatting and content is preserved correctly.
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <Label htmlFor="resume-text">Or Paste Resume Text</Label>
                     <Button variant="outline" size="sm" onClick={loadSampleResume} type="button">
-                      Load PHP Developer Resume
+                      Try Sample Resume
                     </Button>
                   </div>
-                  <Textarea
-                    id="resume-text"
-                    placeholder="Paste your resume content here..."
+                  <EnhancedTextarea
                     value={resumeText}
-                    onChange={(e) => setResumeText(e.target.value)}
+                    onChange={setResumeText}
+                    placeholder="Paste your resume content here..."
                     rows={10}
-                    className="mt-1"
                   />
                 </CardContent>
               </Card>

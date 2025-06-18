@@ -139,17 +139,24 @@ resume-analyzer/
    - Click "Analyze Resume" from the homepage
    - Or go directly to \`/analyze\`
 
-2. **Upload Your Resume**
-   - Upload a PDF file, or
-   - Paste your resume text directly
-   - Use the "Load PHP Developer Resume" button to try with sample data
+2. **Input Your Resume**
+   - **Recommended**: Copy and paste your resume text directly (most accurate)
+   - Upload a plain text (.txt) file, or
+   - Use the "Try Sample Resume" button to see how it works
+   - **Note**: PDF upload is temporarily disabled for better performance
 
-3. **Add Job Description (Optional)**
+3. **For PDF Users**
+   - Open your PDF resume
+   - Select all text (Ctrl+A or Cmd+A)
+   - Copy the text (Ctrl+C or Cmd+C)  
+   - Paste it in the text area
+
+4. **Add Job Description (Optional)**
    - Paste a job description for targeted analysis
    - Use sample job descriptions provided
    - This enables job matching features
 
-4. **Get Analysis**
+5. **Get Analysis**
    - Click "Analyze Resume"
    - Wait for AI processing (usually 2-5 seconds)
    - Review detailed feedback and recommendations
@@ -265,12 +272,17 @@ npm run build         # Test production build
    - Ensure file is a valid PDF
    - Try copying and pasting text manually
 
-3. **Analysis Taking Too Long**
+3. **PDF Upload Issues**
+   - PDF extraction is temporarily disabled for performance reasons
+   - Copy and paste text from your PDF manually for best results
+   - This ensures 100% accuracy and faster processing
+
+4. **Analysis Taking Too Long**
    - Check your OpenAI API quota
    - Verify internet connection
    - Try with shorter resume text
 
-4. **Build Errors**
+5. **Build Errors**
    - Run \`npm install\` to ensure all dependencies are installed
    - Check Node.js version (18+ required)
    - Clear \`.next\` folder and rebuild
