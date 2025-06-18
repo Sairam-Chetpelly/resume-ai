@@ -1,12 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2, Download, Eye } from "lucide-react"
+import { ResumePreview } from "./resume-preview"
 
 interface PersonalInfo {
   fullName: string
@@ -61,6 +62,7 @@ export function ResumeBuilder() {
   })
 
   const [newSkill, setNewSkill] = useState("")
+  const [showPreview, setShowPreview] = useState(false)
 
   const addExperience = () => {
     const newExp: Experience = {
@@ -176,23 +178,93 @@ export function ResumeBuilder() {
     return resume
   }
 
+  const downloadResume = () => {
+    const resumeContent = generateResumeText()
+    if (!resumeContent.trim()) {
+      alert("Please add some content to your resume before downloading.")
+      return
+    }
+
+    const blob = new Blob([resumeContent], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${resumeData.personalInfo.fullName || "My_Resume"}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const loadSampleData = () => {
+    setResumeData({
+      personalInfo: {
+        fullName: "John Smith",
+        email: "john.smith@email.com",
+        phone: "(555) 123-4567",
+        location: "San Francisco, CA",
+        linkedin: "linkedin.com/in/johnsmith",
+        website: "johnsmith.dev",
+      },
+      summary:
+        "Experienced software engineer with 5+ years developing scalable web applications. Passionate about creating efficient solutions and leading development teams to deliver high-quality products.",
+      experiences: [
+        {
+          id: "1",
+          company: "TechCorp Inc.",
+          position: "Senior Software Engineer",
+          startDate: "Jan 2022",
+          endDate: "",
+          current: true,
+          description:
+            "• Led development of microservices architecture serving 1M+ users\n• Improved application performance by 40% through code optimization\n• Mentored 3 junior developers and conducted code reviews",
+        },
+        {
+          id: "2",
+          company: "StartupXYZ",
+          position: "Full Stack Developer",
+          startDate: "Jun 2020",
+          endDate: "Dec 2021",
+          current: false,
+          description:
+            "• Built responsive web applications using React and Node.js\n• Integrated third-party APIs and payment systems\n• Collaborated with design team to implement user-centered features",
+        },
+      ],
+      education: [
+        {
+          id: "1",
+          institution: "University of California",
+          degree: "Bachelor of Science",
+          field: "Computer Science",
+          graduationDate: "May 2020",
+          gpa: "3.8",
+        },
+      ],
+      skills: ["JavaScript", "React", "Node.js", "Python", "AWS", "Docker", "MongoDB", "PostgreSQL"],
+    })
+    setShowPreview(true)
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Resume Builder</h1>
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Eye className="mr-2 h-4 w-4" />
-            Preview
+          <Button variant="outline" onClick={loadSampleData}>
+            Load Sample
           </Button>
-          <Button>
+          <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
+            <Eye className="mr-2 h-4 w-4" />
+            {showPreview ? "Hide Preview" : "Show Preview"}
+          </Button>
+          <Button onClick={downloadResume}>
             <Download className="mr-2 h-4 w-4" />
             Download
           </Button>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "lg:grid-cols-1 max-w-4xl mx-auto"}`}>
         {/* Form Section */}
         <div className="space-y-6">
           {/* Personal Information */}
@@ -454,19 +526,11 @@ export function ResumeBuilder() {
         </div>
 
         {/* Preview Section */}
-        <div className="lg:sticky lg:top-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Resume Preview</CardTitle>
-              <CardDescription>This is how your resume will look</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-white border p-6 rounded-lg min-h-[600px] font-mono text-sm whitespace-pre-line">
-                {generateResumeText() || "Start filling out the form to see your resume preview..."}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {showPreview && (
+          <div className="lg:sticky lg:top-6">
+            <ResumePreview resumeData={resumeData} onDownload={downloadResume} />
+          </div>
+        )}
       </div>
     </div>
   )
